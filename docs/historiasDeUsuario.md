@@ -1,4 +1,4 @@
-# Histórias de Usuário — Sprint 01
+# Histórias de Usuário 
 
 ## HU01 — Cadastro do aluno
 
