@@ -53,6 +53,7 @@ classDiagram
 
     class Vantagem {
         -Long id
+        -String nome
         -String descricao
         -String foto
         -int custoMoedas
@@ -106,7 +107,6 @@ classDiagram
     Aluno "1" --> "*" TransacaoResgate : realiza
     TransacaoResgate "*" --> "1" Vantagem : refere-se a
     TransacaoResgate "1" --> "1" Cupom : gera
-    Cupom "*" --> "1" EmpresaParceira : conferido por
 
     EmailService ..> TransacaoEnvio
     EmailService ..> Cupom
