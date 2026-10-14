@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Alunos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="container">
+  <p><a href="index.html">← Voltar</a></p>
+  <h1>Alunos</h1>
+  <div id="msg"></div>
+
+  <form id="form">
+    <input type="hidden" id="id">
+    <label>Nome <input id="nome" required></label>
+    <label>Email <input id="email" type="email" required></label>
+    <label>CPF (11 dígitos) <input id="cpf" maxlength="11" required></label>
+    <label>RG <input id="rg" required></label>
+    <label>Endereço <input id="endereco" required></label>
+    <label>Instituição de Ensino
+      <select id="instituicao" required></select>
+    </label>
+    <label>Curso
+      <select id="curso" required></select>
+    </label>
+    <label>Login <input id="login" required minlength="4"></label>
+    <label>Senha <input id="senha" type="password" placeholder="(deixe vazio para manter na edição)"></label>
+    <div class="acoes">
+      <button type="submit" id="salvar">Cadastrar</button>
+      <button type="button" class="sec" id="cancelar" hidden>Cancelar edição</button>
+    </div>
+  </form>
+
+  <table>
+    <thead>
+      <tr><th>Nome</th><th>Email</th><th>CPF</th><th>Instituição</th><th>Curso</th><th>Saldo</th><th>Ações</th></tr>
+    </thead>
+    <tbody id="lista"></tbody>
+  </table>
+</main>
+
+<script>
+const API = '/api/alunos';
+const $ = id => document.getElementById(id);
+
+function aviso(texto, tipo) {
+  const m = $('msg');
+  m.textContent = texto;
+  m.className = tipo;
+  setTimeout(() => m.className = '', 4000);
+}
+
+async function carregarInstituicoes() {
+  const r = await fetch('/api/instituicoes');
+  const lista = await r.json();
+  $('instituicao').innerHTML = '<option value="">Selecione...</option>' +
+    lista.map(i => `<option value="${i.id}">${i.nome}</option>`).join('');
+}
+
+async function carregarCursos(instId, selecionado) {
+  if (!instId) { $('curso').innerHTML = ''; return; }
+  const r = await fetch(`/api/instituicoes/${instId}/cursos`);
+  const lista = await r.json();
+  $('curso').innerHTML = lista.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+  if (selecionado) $('curso').value = selecionado;
+}
+
+async function listar() {
+  const alunos = await (await fetch(API)).json();
+  $('lista').innerHTML = alunos.map(a => `
+    <tr>
+      <td>${a.nome}</td><td>${a.email}</td><td>${a.cpf}</td>
+      <td>${a.instituicao}</td><td>${a.curso}</td><td>${a.saldoMoedas}</td>
+      <td>
+        <button onclick="editar(${a.id})">Editar</button>
+        <button class="danger" onclick="remover(${a.id})">Excluir</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function editar(id) {
+  const a = await (await fetch(`${API}/${id}`)).json();
+  $('id').value = a.id;
+  $('nome').value = a.nome;
+  $('email').value = a.email;
+  $('cpf').value = a.cpf;
+  $('rg').value = a.rg;
+  $('endereco').value = a.endereco;
+  $('login').value = a.login;
+  $('senha').value = '';
+  $('instituicao').value = a.instituicaoId;
+  await carregarCursos(a.instituicaoId, a.cursoId);
+  $('salvar').textContent = 'Salvar alterações';
+  $('cancelar').hidden = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function remover(id) {
+  if (!confirm('Excluir este aluno?')) return;
+  const r = await fetch(`${API}/${id}`, { method: 'DELETE' });
+  if (r.ok) { aviso('Aluno excluído', 'ok'); listar(); }
+  else aviso((await r.json()).erro, 'erro');
+}
+
+function limpar() {
+  $('form').reset();
+  $('id').value = '';
+  $('curso').innerHTML = '';
+  $('salvar').textContent = 'Cadastrar';
+  $('cancelar').hidden = true;
+}
+
+$('instituicao').addEventListener('change', e => carregarCursos(e.target.value));
+$('cancelar').addEventListener('click', limpar);
+
+$('form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const id = $('id').value;
+  const body = {
+    nome: $('nome').value, email: $('email').value, login: $('login').value,
+    senha: $('senha').value, cpf: $('cpf').value, rg: $('rg').value,
+    endereco: $('endereco').value,
+    instituicaoId: Number($('instituicao').value),
+    cursoId: Number($('curso').value)
+  };
+  const r = await fetch(id ? `${API}/${id}` : API, {
+    method: id ? 'PUT' : 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (r.ok) {
+    aviso(id ? 'Aluno atualizado' : 'Aluno cadastrado', 'ok');
+    limpar(); listar();
+  } else {
+    aviso((await r.json()).erro, 'erro');
+  }
+});
+
+carregarInstituicoes().then(listar);
+</script>
+</body>
+</html>
