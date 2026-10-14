@@ -1,0 +1,17 @@
+body { font-family: system-ui, sans-serif; background: #f4f6f8; margin: 0; color: #222; }
+.container { max-width: 960px; margin: 24px auto; padding: 0 16px; }
+.menu a { display: inline-block; margin-right: 12px; padding: 10px 16px; background: #2563eb; color: #fff; border-radius: 6px; text-decoration: none; }
+form, table { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+form { padding: 16px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+label { display: flex; flex-direction: column; font-size: 14px; gap: 4px; }
+input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+button { padding: 8px 14px; border: 0; border-radius: 4px; cursor: pointer; background: #2563eb; color: #fff; }
+button.sec { background: #6b7280; }
+button.danger { background: #dc2626; }
+.acoes { grid-column: 1 / -1; display: flex; gap: 8px; }
+table { width: 100%; border-collapse: collapse; overflow: hidden; }
+th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+th { background: #f0f3f7; }
+#msg { padding: 10px; border-radius: 4px; margin-bottom: 12px; display: none; }
+#msg.ok { background: #d1fae5; display: block; }
+#msg.erro { background: #fee2e2; display: block; }
