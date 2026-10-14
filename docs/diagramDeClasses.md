@@ -1,123 +1,112 @@
-# Diagrama de Classes — Sprint 01
-
-## Descrição
-
-O diagrama apresenta as principais entidades do Sistema de Moeda Estudantil
-e seus relacionamentos.
-
-As principais entidades são:
-
-- Usuário;
-- Aluno;
-- Professor;
-- Empresa Parceira;
-- Instituição de Ensino;
-- Vantagem;
-- Transação;
-- Resgate;
-- Notificação.
-
-## Diagrama
-
 ```mermaid
 classDiagram
-
     class Usuario {
         <<abstract>>
         -Long id
         -String nome
         -String email
-        -String senha
-        -String cpf
-        +login()
-        +logout()
+        -String login
+        -String senhaHash
+        +autenticar(login, senha) boolean
     }
 
     class Aluno {
+        -String cpf
         -String rg
         -String endereco
-        -String curso
-        -BigDecimal saldo
-        +consultarSaldo()
-        +consultarExtrato()
-        +resgatarVantagem()
+        -int saldoMoedas
+        +consultarExtrato() List~Transacao~
+        +resgatarVantagem(Vantagem v) Cupom
+        +receberMoedas(int valor)
     }
 
     class Professor {
-        -String departamento
-        -BigDecimal saldo
-        +enviarMoedas()
-        +consultarSaldo()
-        +consultarExtrato()
+        -String cpf
+        -int saldoMoedas
+        +enviarMoedas(Aluno a, int valor, String motivo) TransacaoEnvio
+        +consultarExtrato() List~Transacao~
+        +creditarSemestre()
     }
 
     class EmpresaParceira {
         -String cnpj
-        -String endereco
-        +cadastrarVantagem()
-        +consultarResgates()
+        -String nomeFantasia
+        +cadastrarVantagem(Vantagem v)
+        +editarVantagem(Vantagem v)
+        +removerVantagem(Long id)
     }
 
     class InstituicaoEnsino {
         -Long id
         -String nome
-        -String endereco
-        +cadastrarProfessor()
+    }
+
+    class Departamento {
+        -Long id
+        -String nome
+    }
+
+    class Curso {
+        -Long id
+        -String nome
     }
 
     class Vantagem {
         -Long id
-        -String nome
         -String descricao
         -String foto
-        -BigDecimal custoMoedas
-        -Boolean ativa
-        +ativar()
-        +desativar()
+        -int custoMoedas
+        -boolean ativa
     }
 
     class Transacao {
+        <<abstract>>
         -Long id
-        -Date data
-        -Integer quantidade
-        -String tipo
+        -LocalDateTime data
+        -int valor
+    }
+
+    class TransacaoEnvio {
         -String motivo
-        +registrar()
     }
 
-    class Resgate {
-        -Long id
-        -Date data
+    class TransacaoResgate {
+    }
+
+    class Cupom {
         -String codigo
-        -Integer quantidadeMoedas
-        -String status
-        +gerarCodigo()
-        +confirmar()
+        -LocalDateTime dataEmissao
+        -boolean utilizado
     }
 
-    class Notificacao {
-        -Long id
-        -String destinatario
-        -String assunto
-        -String mensagem
-        -Date dataEnvio
-        +enviar()
+    class EmailService {
+        <<service>>
+        +notificarRecebimentoMoedas(TransacaoEnvio t)
+        +enviarCupomAluno(Cupom c)
+        +enviarConferenciaEmpresa(Cupom c)
     }
 
     Usuario <|-- Aluno
     Usuario <|-- Professor
     Usuario <|-- EmpresaParceira
 
-    InstituicaoEnsino "1" --> "0..*" Aluno : possui
-    InstituicaoEnsino "1" --> "0..*" Professor : possui
+    InstituicaoEnsino "1" --> "*" Departamento : possui
+    InstituicaoEnsino "1" --> "*" Curso : oferece
+    Departamento "1" --> "*" Professor : vincula
+    Professor "*" --> "1" InstituicaoEnsino : pertence a
+    Aluno "*" --> "1" InstituicaoEnsino : estuda em
+    Aluno "*" --> "1" Curso : cursa
 
-    EmpresaParceira "1" --> "0..*" Vantagem : oferece
+    EmpresaParceira "1" --> "*" Vantagem : oferece
 
-    Professor "1" --> "0..*" Transacao : realiza
-    Aluno "1" --> "0..*" Transacao : recebe
+    Transacao <|-- TransacaoEnvio
+    Transacao <|-- TransacaoResgate
+    Professor "1" --> "*" TransacaoEnvio : realiza
+    Aluno "1" --> "*" TransacaoEnvio : recebe
+    Aluno "1" --> "*" TransacaoResgate : realiza
+    TransacaoResgate "*" --> "1" Vantagem : refere-se a
+    TransacaoResgate "1" --> "1" Cupom : gera
+    Cupom "*" --> "1" EmpresaParceira : conferido por
 
-    Aluno "1" --> "0..*" Resgate : realiza
-    Vantagem "1" --> "0..*" Resgate : possui
-
-    Resgate "1" --> "1..*" Notificacao : gera
-    Transacao "1" --> "0..*" Notificacao : gera
+    EmailService ..> TransacaoEnvio
+    EmailService ..> Cupom
