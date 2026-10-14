@@ -1,4 +1,4 @@
-erDiagram
+```mermaid
 
     USUARIO {
         BIGINT id PK
